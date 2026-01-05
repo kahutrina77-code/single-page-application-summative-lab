@@ -3,7 +3,7 @@
 An interactive dictionary web application where users can search for words, listen to pronunciations, and save their favorites.
 
 ## Live Demo
-[View Live Application](https://kahutrina77-code.github.io/wordly-dictionary/)
+[View Live Application](https://kahutrina77-code.github.io/single-page-application-summative-lab/)
 
 ## Features
 
