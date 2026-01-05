@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordly - Interactive Dictionary</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+        }
+
+        .tagline {
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        #wordInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        #wordInput:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        #searchBtn {
+            padding: 12px 30px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #searchBtn:hover {
+            background-color: #2980b9;
+        }
+
+        #searchBtn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Loading Indicator */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        /* Error Message */
+        .error-message {
+            background-color: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Results Section */
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        /* Word Header */
+        .word-header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .word-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .phonetic {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .audio-btn {
+            padding: 10px 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .audio-btn:hover {
+            background-color: #229954;
+        }
+
+        .save-btn {
+            padding: 10px 20px;
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .save-btn:hover {
+            background-color: #8e44ad;
+        }
+
+        .save-btn.saved {
+            background-color: #95a5a6;
+        }
+
+        /* Meaning Card */
+        .meaning-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .part-of-speech {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .definition-list {
+            list-style: none;
+        }
+
+        .definition-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3498db;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+
+        .definition-text {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .example {
+            color: #7f8c8d;
+            font-style: italic;
+            padding-left: 15px;
+        }
+
+        /* Synonyms */
+        .synonyms {
+            margin-top: 15px;
+        }
+
+        .synonyms h4 {
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+
+        .synonym-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .synonym-tag {
+            background-color: #ecf0f1;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .synonym-tag:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* Source */
+        .source {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .source h3 {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .source a {
+            color: #3498db;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .source a:hover {
+            text-decoration: underline;
+        }
+
+        /* Saved Words Panel */
+        .saved-words-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .saved-words-toggle {
+            padding: 10px 20px;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .saved-words-toggle:hover {
+            background-color: #d35400;
+        }
+
+        .saved-words-list {
+            display: none;
+        }
+
+        .saved-words-list.show {
+            display: block;
+        }
+
+        .saved-word-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .saved-word-item span {
+            cursor: pointer;
+            color: #2c3e50;
+        }
+
+        .saved-word-item span:hover {
+            color: #3498db;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <h1>📚 Wordly Dictionary</h1>
+            <p class="tagline">Your interactive language learning companion</p>
+        </header>
+
+        <!-- Saved Words Section -->
+        <div class="saved-words-section">
+            <button class="saved-words-toggle" id="savedWordsToggle">View Saved Words</button>
+            <div class="saved-words-list" id="savedWordsList"></div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <form class="search-form" id="searchForm">
+                <input 
+                    type="text" 
+                    id="wordInput" 
+                    placeholder="Enter a word to search..." 
+                    aria-label="Word search input"
+                    required
+                >
+                <button type="submit" id="searchBtn" aria-label="Search button">Search</button>
+            </form>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading">
+            <p>Searching for your word...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Results Section -->
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        // ===========================
+        // GLOBAL VARIABLES
+        // ===========================
+        
+        // Store saved words in memory (no localStorage as per requirements)
+        let savedWords = [];
+        
+        // Store current word data
+        let currentWordData = null;
+
+        // ===========================
+        // DOM ELEMENTS
+        // ===========================
+        
+        const searchForm = document.getElementById('searchForm');
+        const wordInput = document.getElementById('wordInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const results = document.getElementById('results');
+        const savedWordsToggle = document.getElementById('savedWordsToggle');
+        const savedWordsList = document.getElementById('savedWordsList');
+
+        // ===========================
+        // EVENT LISTENERS
+        // ===========================
+        
+        // Listen for form submission
+        searchForm.addEventListener('submit', handleSearch);
+        
+        // Listen for saved words toggle
+        savedWordsToggle.addEventListener('click', toggleSavedWords);
+
+        // ===========================
+        // MAIN SEARCH FUNCTION
+        // ===========================
+        
+        /**
+         * Handles the search form submission
+         * Fetches word data from the API and displays results
+         */
+        async function handleSearch(event) {
+            // Prevent form from refreshing the page
+            event.preventDefault();
+            
+            // Get the word from input and clean it up
+            const word = wordInput.value.trim().toLowerCase();
+            
+            // Validate input - check if word is not empty
+            if (!word) {
+                showError('Please enter a word to search.');
+                return;
+            }
+
+            // Prepare UI for loading
+            hideError();
+            hideResults();
+            showLoading();
+            disableSearchButton();
+
+            try {
+                // Fetch data from Dictionary API
+                const data = await fetchWordData(word);
+                
+                // Store the data
+                currentWordData = data[0];
+                
+                // Display the results
+                displayResults(currentWordData);
+                
+            } catch (error) {
+                // Handle errors (word not found, network issues, etc.)
+                handleError(error, word);
+            } finally {
+                // Re-enable search button and hide loading
+                hideLoading();
+                enableSearchButton();
+            }
+        }
+
+        // ===========================
+        // API FETCH FUNCTION
+        // ===========================
+        
+        /**
+         * Fetches word data from the Free Dictionary API
+         * @param {string} word - The word to search for
+         * @returns {Promise} - Promise with word data
+         */
+        async function fetchWordData(word) {
+            // API endpoint
+            const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
+            
+            // Make the fetch request
+            const response = await fetch(apiUrl);
+            
+            // Check if request was successful
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            // Parse and return JSON data
+            return await response.json();
+        }
+
+        // ===========================
+        // DISPLAY FUNCTIONS
+        // ===========================
+        
+        /**
+         * Displays the word data on the page
+         * @param {Object} wordData - The word data from API
+         */
+        function displayResults(wordData) {
+            // Extract data from API response
+            const word = wordData.word;
+            const phonetic = wordData.phonetic || 'No pronunciation available';
+            const phonetics = wordData.phonetics || [];
+            const meanings = wordData.meanings || [];
+            const sourceUrls = wordData.sourceUrls || [];
+
+            // Find audio URL if available
+            let audioUrl = null;
+            for (let i = 0; i < phonetics.length; i++) {
+                if (phonetics[i].audio) {
+                    audioUrl = phonetics[i].audio;
+                    break;
+                }
+            }
+
+            // Check if word is already saved
+            const isSaved = savedWords.includes(word);
+
+            // Build HTML for word header
+            let html = `
+                <div class="word-header">
+                    <h2 class="word-title">${word}</h2>
+                    <p class="phonetic">${phonetic}</p>
+                    <div>
+                        ${audioUrl ? 
+                            `<button class="audio-btn" onclick="playPronunciation('${audioUrl}')" aria-label="Play pronunciation">
+                                🔊 Play Pronunciation
+                            </button>` : 
+                            ''
+                        }
+                        <button class="save-btn ${isSaved ? 'saved' : ''}" 
+                                onclick="toggleSaveWord('${word}')"
+                                aria-label="Save word">
+                            ${isSaved ? '✓ Saved' : '💾 Save Word'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Loop through meanings and build HTML
+            meanings.forEach(function(meaning) {
+                html += `
+                    <div class="meaning-card">
+                        <span class="part-of-speech">${meaning.partOfSpeech}</span>
+                        <ul class="definition-list">
+                `;
+
+                // Display up to 3 definitions
+                const definitionsToShow = meaning.definitions.slice(0, 3);
+                definitionsToShow.forEach(function(def, index) {
+                    html += `
+                        <li class="definition-item">
+                            <p class="definition-text">${index + 1}. ${def.definition}</p>
+                            ${def.example ? 
+                                `<p class="example">"${def.example}"</p>` : 
+                                ''
+                            }
+                        </li>
+                    `;
+                });
+
+                html += `</ul>`;
+
+                // Add synonyms if available
+                if (meaning.synonyms && meaning.synonyms.length > 0) {
+                    html += `
+                        <div class="synonyms">
+                            <h4>Synonyms:</h4>
+                            <div class="synonym-list">
+                    `;
+                    
+                    // Display up to 6 synonyms
+                    const synonymsToShow = meaning.synonyms.slice(0, 6);
+                    synonymsToShow.forEach(function(synonym) {
+                        html += `
+                            <span class="synonym-tag" 
+                                  onclick="searchSynonym('${synonym}')"
+                                  role="button"
+                                  tabindex="0">
+                                ${synonym}
+                            </span>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+            });
+
+            // Add source URL if available
+            if (sourceUrls.length > 0) {
+                html += `
+                    <div class="source">
+                        <h3>📖 Source</h3>
+                        <a href="${sourceUrls[0]}" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           aria-label="View source">
+                            ${sourceUrls[0]}
+                        </a>
+                    </div>
+                `;
+            }
+
+            // Update the results section with HTML
+            results.innerHTML = html;
+            showResults();
+        }
+
+        // ===========================
+        // AUDIO PLAYBACK
+        // ===========================
+        
+        /**
+         * Plays the pronunciation audio
+         * @param {string} url - Audio file URL
+         */
+        function playPronunciation(url) {
+            const audio = new Audio(url);
+            audio.play().catch(function(error) {
+                showError('Unable to play audio pronunciation.');
+            });
+        }
+
+        // ===========================
+        // SYNONYM SEARCH
+        // ===========================
+        
+        /**
+         * Searches for a synonym when clicked
+         * @param {string} word - The synonym to search
+         */
+        function searchSynonym(word) {
+            wordInput.value = word;
+            searchForm.dispatchEvent(new Event('submit'));
+        }
+
+        // ===========================
+        // SAVE WORD FUNCTIONALITY
+        // ===========================
+        
+        /**
+         * Toggles saving/unsaving a word
+         * @param {string} word - The word to save/unsave
+         */
+        function toggleSaveWord(word) {
+            if (savedWords.includes(word)) {
+                // Remove word from saved list
+                savedWords = savedWords.filter(function(w) {
+                    return w !== word;
+                });
+            } else {
+                // Add word to saved list
+                savedWords.push(word);
+            }
+            
+            // Update the display
+            displayResults(currentWordData);
+            updateSavedWordsList();
+        }
+
+        /**
+         * Toggles the display of saved words list
+         */
+        function toggleSavedWords() {
+            const isVisible = savedWordsList.classList.contains('show');
+            
+            if (isVisible) {
+                savedWordsList.classList.remove('show');
+                savedWordsToggle.textContent = 'View Saved Words';
+            } else {
+                updateSavedWordsList();
+                savedWordsList.classList.add('show');
+                savedWordsToggle.textContent = 'Hide Saved Words';
+            }
+        }
+
+        /**
+         * Updates the saved words list display
+         */
+        function updateSavedWordsList() {
+            if (savedWords.length === 0) {
+                savedWordsList.innerHTML = '<p style="color: #7f8c8d;">No saved words yet. Search for words and save them!</p>';
+                return;
+            }
+
+            let html = '<h3 style="margin-bottom: 15px;">Your Saved Words:</h3>';
+            
+            savedWords.forEach(function(word) {
+                html += `
+                    <div class="saved-word-item">
+                        <span onclick="searchSavedWord('${word}')">${word}</span>
+                        <button class="delete-btn" 
+                                onclick="deleteSavedWord('${word}')"
+                                aria-label="Delete saved word">
+                            Delete
+                        </button>
+                    </div>
+                `;
+            });
+
+            savedWordsList.innerHTML = html;
+        }
+
+        /**
+         * Searches for a saved word when clicked
+         * @param {string} word - The saved word to search
+         */
+        function searchSavedWord(word) {
+            wordInput.value = word;
+            savedWordsList.classList.remove('show');
+            savedWordsToggle.textContent = 'View Saved Words';
+            searchForm.dispatchEvent(new Event('submit'));
+        }
+
+        /**
+         * Deletes a word from saved list
+         * @param {string} word - The word to delete
+         */
+        function deleteSavedWord(word) {
+            savedWords = savedWords.filter(function(w) {
+                return w !== word;
+            });
+            updateSavedWordsList();
+            
+            // Update current display if it's the same word
+            if (currentWordData && currentWordData.word === word) {
+                displayResults(currentWordData);
+            }
+        }
+
+        // ===========================
+        // ERROR HANDLING
+        // ===========================
+        
+        /**
+         * Handles errors from API fetch
+         * @param {Error} error - The error object
+         * @param {string} word - The word that was searched
+         */
+        function handleError(error, word) {
+            if (error.message.includes('404')) {
+                showError(`Sorry, we couldn't find the word "${word}". Please check your spelling and try again.`);
+            } else if (error.message.includes('Failed to fetch')) {
+                showError('Network error. Please check your internet connection and try again.');
+            } else {
+                showError('An unexpected error occurred. Please try again later.');
+            }
+        }
+
+        // ===========================
+        // UI HELPER FUNCTIONS
+        // ===========================
+        
+        /**
+         * Shows error message
+         * @param {string} message - Error message to display
+         */
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        /**
+         * Hides error message
+         */
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        /**
+         * Shows loading indicator
+         */
+        function showLoading() {
+            loading.classList.add('show');
+        }
+
+        /**
+         * Hides loading indicator
+         */
+        function hideLoading() {
+            loading.classList.remove('show');
+        }
+
+        /**
+         * Shows results section
+         */
+        function showResults() {
+            results.classList.add('show');
+        }
+
+        /**
+         * Hides results section
+         */
+        function hideResults() {
+            results.classList.remove('show');
+        }
+
+        /**
+         * Disables search button during loading
+         */
+        function disableSearchButton() {
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+        }
+
+        /**
+         * Enables search button after loading
+         */
+        function enableSearchButton() {
+            searchBtn.disabled = false;
+            searchBtn.textContent = 'Search';
+        }
+    </script>
+</body>
+</html>
